@@ -18,6 +18,16 @@ sequelize.models = models;
 sequelize
     .sync()
     .then(() => {
+        return models.User.FindByPk(1)
+    })
+    .then(user => {
+        if (!user) {
+            return models.User.create({ name: 'user', email: 'user@local.com'})
+        }
+        return user;
+    })
+    .then((user) => {
+        console.log(user)
         app.listen(3002);
         console.log('Listening on port 3002')
     })
