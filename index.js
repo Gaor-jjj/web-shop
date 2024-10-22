@@ -8,6 +8,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Routes
 const productAdminRoutes = require('./routes/admin/product');
 app.use('/admin', productAdminRoutes);
+const productRoutes = require('./routes/product');
+app.use(productRoutes);
 
 const sequelize = require('./util/db')
 const models = require('./models/index');
