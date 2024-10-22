@@ -1,7 +1,6 @@
 const path = require('path');
 const fs = require('fs');
 const sequelize = require('../util/db');
-const { type } = require('os');
 const models = {};
 
 module.exports = (() => {
