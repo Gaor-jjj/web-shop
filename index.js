@@ -23,6 +23,8 @@ const productAdminRoutes = require('./routes/admin/product');
 app.use('/admin', productAdminRoutes);
 const productRoutes = require('./routes/product');
 app.use(productRoutes);
+const shopRoutes = require('./routes/shop');
+app.use(shopRoutes)
 
 sequelize
     .sync()
@@ -35,10 +37,16 @@ sequelize
         }
         return user;
     })
-    .then((user) => {
-        console.log(user)
-        app.listen(3002);
-        console.log('Listening on port 3002')
+    .then(async (user) => {
+        const cart = await user.getCart();
+        if (!cart) {
+            return user.createCart();
+        }
+        return cart;
+    })
+    .then((cart) => {
+        console.log('User cart:', cart)
+        app.listen(3002)
     })
     .catch((error) => {
         console.log(error)
