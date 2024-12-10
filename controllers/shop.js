@@ -1,6 +1,8 @@
 const Product = require('../models/product');
 const Cart = require('../models/cart');
 const CartItem = require('../models/cart-item');
+const Order = require('../models/order')
+const OrderItem = require('../models/order-item')
 
 class shopController {
     async getCart(req, res) {
@@ -60,6 +62,60 @@ class shopController {
             res.status(500).json({ message: 'Error removing product from cart', error })
         }
     }
+
+    async createOrder(req, res) {
+        try {
+            const userCart = await req.user.getCart();
+            const cartProducts = await userCart.getProducts();
+    
+            if (cartProducts.length === 0) {
+                return res.status(400).json({ message: 'Cart is empty. Cannot create an order.' });
+            }
+    
+            const newOrder = await req.user.createOrder();
+    
+            const orderItems = cartProducts.map(product => ({
+                productId: product.id,
+                quantity: product.cartItem.quantity,
+                orderId: newOrder.id
+            }));
+    
+            await OrderItem.bulkCreate(orderItems);
+    
+            await userCart.setProducts([]);
+    
+            res.status(201).json({ message: 'Order created successfully', orderId: newOrder.id });
+        } catch (error) {
+            console.error('Error creating order: ', error);
+            res.status(500).json({ message: 'Error creating order', error });
+        }
+    }
+
+    async getUserOrders(req, res) {
+        try {
+            const userOrders = await req.user.getOrders({
+                include: [{ model: req.models.Product, through: { attributes: ['quantity'] } }]
+            });
+    
+            const formattedOrders = userOrders.map(order => ({
+                id: order.id,
+                products: order.products.map(product => ({
+                    id: product.id,
+                    title: product.title,
+                    quantity: product.orderItem.quantity
+                }))
+            }));
+    
+            res.status(200).json({
+                message: 'Orders retrieved successfully',
+                orders: formattedOrders
+            });
+        } catch (error) {
+            console.error('Error fetching user orders:', error);
+            res.status(500).json({ message: 'Failed to fetch orders', error });
+        }
+    }
+    
 }
 
 module.exports = new shopController()
